@@ -1,0 +1,12 @@
+---
+# vars file for installsplunkforwarder
+
+temppath: "/tmp"
+splunkpath: "/opt/splunkforwarder"
+splunkbin: "{{ splunkpath }}/bin/splunk"
+splunkmonitorconf: "{{ splunkpath }}/etc/apps/search/local/inputs.conf"
+splunkhostnameconf: "{{ splunkpath }}/etc/system/local/inputs.conf"
+splunkpropsconf: "{{ splunkpath }}/etc/system/local/props.conf"
+splunkserverconf: "{{ splunkpath }}/etc/system/local/server.conf"
+splunkcreds: "admin:changeme"
+

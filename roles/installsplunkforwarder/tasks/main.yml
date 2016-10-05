@@ -1,0 +1,110 @@
+---
+# tasks file for installsplunkforwarder
+
+  - include_vars: "splunk-forwarder-version.yml"
+  - include_vars: "splunk-servers.yml"
+  - include_vars: "splunk-forwarder-package-{{ ansible_os_family  }}.yml"
+
+  - name: get current config
+    fetch: src="{{ splunkmonitorconf }}"
+           dest="fetched/"
+           fail_on_missing="no"
+    ignore_errors: "yes"
+
+  - name: test for manifest file
+    stat: path="{{ splunkforwardermanifest }}"
+    register: manifest
+    always_run: yes
+
+  - block: 
+
+    - name: shut down splunk service
+      service: name="splunk"
+               state="stopped"
+      ignore_errors: "yes"
+
+    - name: remove splunk deb package
+      apt: name="splunkforwarder"
+           state="absent"
+           purge="yes"
+      ignore_errors: "yes"
+      when: ansible_os_family == "Debian"
+
+    - name: remove splunk rpm package
+      yum: name="splunkforwarder"
+           state="absent"
+      ignore_errors: "yes"
+      when: ansible_os_family == "RedHat"
+
+    - name: remove splunkforwarder directory
+      file: path="{{ splunkpath }}"
+            state="absent"
+
+    - name: copy splunkforwarder package
+      copy: src="{{ splunkforwarderpackage }}"
+            dest="{{ temppath }}/"
+
+    - name: install splunk deb package
+      apt: deb="{{ temppath }}/{{ splunkforwarderpackage }}"
+           state="present"
+      when: ansible_os_family == "Debian"
+
+    - name: install splunk rpm package
+      yum: name="{{ temppath }}/{{ splunkforwarderpackage }}"
+           state="present"
+           disable_gpg_check="yes"
+      when: ansible_os_family == "RedHat"
+
+    - name: splunk license acceptance
+      command:  "{{ splunkbin }} start --accept-license --answer-yes --no-prompt"
+      notify: restart_splunk
+
+    - name: setup to start at boot
+      command: "{{ splunkbin }} enable boot-start"
+      notify: restart_splunk
+
+    - name: set hostname for splunk
+      command: "{{ splunkbin }} set servername {{ inventory_hostname }} -auth {{ splunkcreds }}"
+      notify: restart_splunk
+
+    - name: connect forwarder to splunk server
+      command: "{{ splunkbin }} add forward-server {{ item }} -method clone -auth {{ splunkcreds }}"
+      with_items: "{{ splunkservers }}"
+      notify: restart_splunk
+
+    - name: add temporary monitor to create directory
+      command: "{{ splunkbin }} add monitor /etc/hosts -auth {{ splunkcreds }}"
+      notify: restart_splunk
+
+    when: not manifest.stat.exists
+
+  - name: fix hostname
+    ini_file: dest="{{ splunkhostnameconf }}"
+              section="default"
+              option="host"
+              value="{{ inventory_hostname_short }}"
+    notify: restart_splunk
+
+  - name: turn off web server
+    ini_file: dest="{{ splunkserverconf }}"
+              section="httpServer"
+              option="disableDefaultPort"
+              value="true"
+    notify: restart_splunk
+
+  - name: copy inputs file
+    copy: src="{{ item }}"
+          dest="{{ splunkmonitorconf }}"
+    with_first_found:
+     - "{{ ansible_hostname }}-inputs.conf"
+     - "default-inputs.conf"
+    notify: restart_splunk
+
+  - name: copy props file
+    copy: src="{{ item }}"
+          dest="{{ splunkpropsconf }}"
+    with_first_found:
+     - "{{ ansible_hostname }}-props.conf"
+     - "default-props.conf"
+    notify: restart_splunk
+
