@@ -1,0 +1,4 @@
+
+splunkservers:
+ - "mysplunkserver.example.com:9997"
+
