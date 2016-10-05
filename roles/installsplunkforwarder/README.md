@@ -30,10 +30,12 @@ None.
 Example Playbook
 ----------------
 
+```yml
 - hosts: splunkforwarders
   become: true
   roles:
     - installsplunkforwarder
+```
 
 License
 -------
