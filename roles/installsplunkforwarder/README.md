@@ -30,10 +30,18 @@ None.
 Example Playbook
 ----------------
 
+<<<<<<< HEAD
+=======
+```yml
+>>>>>>> e03fc76f56b531ad09e71d9fd6d550509a97fcb5
 - hosts: splunkforwarders
   become: true
   roles:
     - installsplunkforwarder
+<<<<<<< HEAD
+=======
+```
+>>>>>>> e03fc76f56b531ad09e71d9fd6d550509a97fcb5
 
 License
 -------
