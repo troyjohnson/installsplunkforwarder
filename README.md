@@ -1,6 +1,4 @@
 # installsplunkforwarder
-<<<<<<< HEAD
-=======
 
 Install a Splunk Forwarder
 
@@ -10,5 +8,5 @@ The preconditions are:
 
 1. A Splunk server is configured and ready to receive forwarded messages
 2. The network and hosts allow the forwarded messages to get there
-3. nothing bad happens
->>>>>>> e03fc76f56b531ad09e71d9fd6d550509a97fcb5
+3. Nothing bad happens
+
